@@ -16,7 +16,7 @@ steps:
     entrypoint: 'pack'
     args: ['build',
            '--builder=gcr.io/buildpacks/builder',
-           '--publish', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/slsa-demo/golang-run-app:$BUILD_ID']
+           '--publish', 'us-central1-docker.pkg.dev/${PROJECT_ID}/slsa-demo/golang-run-app:$BUILD_ID']
     id: Build and package GOLANG app 
   - name: gcr.io/cloud-builders/docker
     entrypoint: /bin/bash
