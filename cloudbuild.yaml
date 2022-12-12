@@ -35,7 +35,7 @@ steps:
       -v=10 \
       -alsologtostderr \
       -image=$(/bin/cat image-digest.txt) \
-      -policy=policy-loose.yaml \
+      -policy=policy-strict.yaml \
       -kms_key_name=projects/$PROJECT_ID/locations/global/keyRings/kritis-signer-key-ring/cryptoKeys/kritis-signer-key/cryptoKeyVersions/1 \
       -kms_digest_alg=SHA256 \
       -note_name=projects/$PROJECT_ID/notes/signed-by-kritis-note
