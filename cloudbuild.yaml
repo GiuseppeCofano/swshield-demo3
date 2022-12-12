@@ -11,44 +11,42 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 steps:
-- name: 'gcr.io/k8s-skaffold/pack'
-  entrypoint: 'pack'
-  args: ['build',
-         '--builder=gcr.io/buildpacks/builder',
-         '--publish', 'us-central1-docker.pkg.dev/${PROJECT_ID}/slsa-demo/golang-run-app:$BUILD_ID']
-  id: Build and package GOLANG app 
-- name: gcr.io/cloud-builders/docker
-  entrypoint: /bin/bash
-  args:
-  - -c
-  - |
-    docker image pull us-central1-docker.pkg.dev/${PROJECT_ID}/slsa-demo/golang-run-app:$BUILD_ID 
-    docker image inspect us-central1-docker.pkg.dev/${PROJECT_ID}/slsa-demo/golang-run-app:$BUILD_ID --format '{{index .RepoDigests 0}}' > image-digest.txt &&
-    cat image-digest.txt
-  id: inspect
-- name: gcr.io/$PROJECT_ID/kritis-signer
-  entrypoint: /bin/bash
-  args:
-  - -c
-  - |
-    /kritis/signer \
-    -v=10 \
-    -alsologtostderr \
-    -image=$(/bin/cat image-digest.txt) \
-    -policy=policy-loose.yaml \
-    -kms_key_name=projects/$PROJECT_ID/locations/global/keyRings/kritis-signer-key-ring/cryptoKeys/kritis-signer-key/cryptoKeyVersions/1 \
-    -kms_digest_alg=SHA256 \
-    -note_name=projects/$PROJECT_ID/notes/signed-by-kritis-note
-  id: vulnsign
-  waitFor: inspect
-- name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
-  args: 
-      [
-        "deploy", "releases", "create", "release-test",
-        "--delivery-pipeline", "cloud-run-pipeline",
-        "--region", "us-central1",
-        "--images", "app=us-central1-docker.pkg.dev/${PROJECT_ID}/slsa-demo/golang-run-app:$BUILD_ID"
-      ]
-  entrypoint: gcloud
+  - name: 'gcr.io/k8s-skaffold/pack'
+    entrypoint: 'pack'
+    args: ['build',
+           '--builder=gcr.io/buildpacks/builder',
+           '--publish', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/slsa-demo/golang-run-app:$BUILD_ID']
+    id: Build and package GOLANG app 
+  - name: gcr.io/cloud-builders/docker
+    entrypoint: /bin/bash
+    args:
+    - -c
+    - |
+      docker image pull us-central1-docker.pkg.dev/${PROJECT_ID}/slsa-demo/golang-run-app:$BUILD_ID 
+      docker image inspect us-central1-docker.pkg.dev/${PROJECT_ID}/slsa-demo/golang-run-app:$BUILD_ID --format '{{index .RepoDigests 0}}' > image-digest.txt && cat image-digest.txt
+    id: inspect
+  - name: gcr.io/$PROJECT_ID/kritis-signer
+    entrypoint: /bin/bash
+    args:
+    - -c
+    - |
+      /kritis/signer \
+      -v=10 \
+      -alsologtostderr \
+      -image=$(/bin/cat image-digest.txt) \
+      -policy=policy-loose.yaml \
+      -kms_key_name=projects/$PROJECT_ID/locations/global/keyRings/kritis-signer-key-ring/cryptoKeys/kritis-signer-key/cryptoKeyVersions/1 \
+      -kms_digest_alg=SHA256 \
+      -note_name=projects/$PROJECT_ID/notes/signed-by-kritis-note
+    id: vulnsign
+    waitFor: [inspect]
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    args: 
+        [
+          "deploy", "releases", "create", "release-test",
+          "--delivery-pipeline", "cloud-run-pipeline",
+          "--region", "us-central1",
+          "--images", "app=us-central1-docker.pkg.dev/${PROJECT_ID}/slsa-demo/golang-run-app:$BUILD_ID"
+        ]
+    entrypoint: gcloud
