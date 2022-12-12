@@ -44,7 +44,7 @@ steps:
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
     args: 
         [
-          "deploy", "releases", "create", "release-test",
+          "deploy", "releases", "create", "release-$BUILD_ID",
           "--delivery-pipeline", "cloud-run-pipeline",
           "--region", "us-central1",
           "--images", "app=us-central1-docker.pkg.dev/${PROJECT_ID}/slsa-demo/golang-run-app:$BUILD_ID"
